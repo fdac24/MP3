@@ -71,7 +71,7 @@ def run(tp):
             except requests.exceptions.RequestException as e:
                 print(f"Error fetching {url}: {e}")
 
-# Run for each type, limiting to the first item per category
+# Run for each type
 run('model')
 run('data')
 run('source')
