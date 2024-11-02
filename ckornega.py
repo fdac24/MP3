@@ -15,7 +15,7 @@ postGHMain: str = 'blob/main/README.md'
 extU: URLExtract = URLExtract()
 DOIpattern: str = r'\b(10\.\d{4,9}\/[-._;()/:A-Z0-9]+)\b/i'
 #r1\b(10[.][0-9]{4,}(?:[.][0-9]+)*/(?:(?!["&\'<>])[[:graph:]])+)\b'
-BIBpattern: str = r'@\w+{\n*.*\n*?}' # Found online
+BIBpattern: str = r'@\w+{.*?[\}]{2}' # Discovery
 
 def extractURLs(c: str) -> list:
     return extU.find_urls(c)
@@ -57,7 +57,9 @@ def run(tp: str):
             content = r.text;
             urls = extractURLs(content)
             dois = extractDOIs(content)
-            bibs = extractBIBS(content)
+            bibs = extractBIBS(content.replace('\n', '').replace('\\n', ''))
+
+            # bibs = [bib[:250] for bib in bibs]
 
             res = {
                 'ID': line,
