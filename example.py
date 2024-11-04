@@ -4,16 +4,15 @@ from urlextract import URLExtract
 import sys, gzip
 
 
-
-utid = 'fgholamr'
+utid = 'audris'
 base= { 'model':'https://huggingface.co/', 'data': 'https://huggingface.co/datasets/', 'source': 'https://' }
 post = '/raw/main/README.md'
 postGH = 'blob/master/README.md' # or it could be 'blob/main/README.md'
 
-extU = URLExtract('https://github.com/GitFarzin/MP3/blob/main/input/fgholamr_model')
+extU = URLExtract()
 DOIpattern = r'\b(10\.\d{4,9}\/[-._;()/:A-Z0-9]+)\b/i'
 #r1\b(10[.][0-9]{4,}(?:[.][0-9]+)*/(?:(?!["&\'<>])[[:graph:]])+)\b'
-c ='https://github.com/GitFarzin/MP3/blob/main/input/fgholamr_model'
+
 def extractURLs (c):
  res = extU.find_urls (c)
  return res
