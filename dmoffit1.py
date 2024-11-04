@@ -4,7 +4,7 @@ from urlextract import URLExtract
 import sys, gzip
 
 
-utid = 'audris'
+utid = 'dmoffit1'
 base= { 'model':'https://huggingface.co/', 'data': 'https://huggingface.co/datasets/', 'source': 'https://' }
 post = '/raw/main/README.md'
 postGH = 'blob/master/README.md' # or it could be 'blob/main/README.md'
