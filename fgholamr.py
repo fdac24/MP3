@@ -7,7 +7,8 @@ import sys, gzip
 utid = 'fgholamr'
 base= { 'model':'https://huggingface.co/', 'data': 'https://huggingface.co/datasets/', 'source': 'https://' }
 post = '/raw/main/README.md'
-postGH = 'blob/master/README.md' # or it could be 'blob/main/README.md'
+postGH = '/blob/master/README.md' # or it could be 'blob/main/README.md'
+postGHMain = '/blob/main/README.md'
 
 extU = URLExtract()
 DOIpattern = r'\b(10\.\d{4,9}\/[-._;()/:A-Z0-9]+)\b/i'
@@ -32,8 +33,25 @@ def run (tp):
     (npapers,line) = line.split(';');
     post0 = postGH
    print(line)
+   
    url = base[tp] + f"{line}{post0}"
+   print(url) #checking for errors in url
    r = requests.get (url)
+   print(post0)
+   if r.status_code == 404:
+      print(f"404 Error at {url} try main") ## Id url error, try switching to Main
+      post0=postGHMain
+      #print(f"updated readme to main", post0) 
+      
+      url = base[tp] + f"{line}{post0}"
+      print(f"updated master to main new url is: {url}") #checking correct url implementation
+      r = requests.get (url) # reinit request
+      if r.status_code == 404: # Empty repo move to next repo
+         print("Empty Master and Main readme")
+         continue
+      
+      
+      
    content = r.text;
    #github returns repos that do not exist, need to detect that here
    #github when you give master instead of main, that might cause issues as well
