@@ -17,9 +17,10 @@ post_paths = {
     'github_main': '/blob/main/README.md'
 }
 
-# Initialize URL extractor and regular expressions for DOIs
+# Initialize URL extractor and regular expressions for DOIs and BibTeX entries
 url_extractor = URLExtract()
 doi_pattern = r'\b(10\.\d{4,9}\/[-._;()/:A-Z0-9]+)\b'
+bibtex_pattern = r'@\w+\{[^}]+\}'
 
 # Define extraction functions
 def extract_urls(content):
@@ -27,6 +28,9 @@ def extract_urls(content):
 
 def extract_dois(content):
     return re.findall(doi_pattern, content, re.IGNORECASE)
+
+def extract_bibs(content):
+    return re.findall(bibtex_pattern, content, re.DOTALL)
 
 # Main function to process each file type and fetch README content
 def process_type(file_type):
@@ -61,7 +65,8 @@ def process_type(file_type):
                 'url': url,
                 'content': content.replace('\n', ' '),
                 'links': extract_urls(content),
-                'dois': extract_dois(content)
+                'dois': extract_dois(content),
+                'bibs': extract_bibs(content)
             }
 
             # Write data entry to output in JSON format
