@@ -3,7 +3,6 @@ import requests
 from urlextract import URLExtract
 import sys, gzip
 
-
 utid = 'dmoffit1'
 base= { 'model':'https://huggingface.co/', 'data': 'https://huggingface.co/datasets/', 'source': 'https://' }
 post = '/raw/main/README.md'
@@ -33,16 +32,32 @@ def run (tp):
     post0 = postGH
    print(line)
    url = base[tp] + f"{line}{post0}"
-   r = requests.get (url)
-   content = r.text;
-   #github returns repos that do not exist, need to detect that here
-   #github when you give master instead of main, that might cause issues as well
-   urls = extractURLs(content)
-   dois = extractDOIs(content)
-   res = { 'ID': line, 'type': tp, 'url': url, 'content': content, 'links': urls, 'dois': dois }
-   out = json.dumps(res, ensure_ascii=False)
-   fo.write((out+"\n").encode())
-
+   try:
+        r = requests.get (url)
+        if r.status_code == 404:
+            content = "not found"
+        elif r.status_code == 403:
+            content = "rate limit exceeded"
+        elif r.status_code != 200:
+            content = f"Error: {r.status_code}"
+        else:
+            content = r.text
+        #github returns repos that do not exist, need to detect that here
+        #github when you give master instead of main, that might cause issues as well
+        urls = extractURLs(content)
+        dois = extractDOIs(content)
+        res = { 'ID': line, 'type': tp, 'url': url, 'content': content, 'links': urls, 'dois': dois }
+        out = json.dumps(res, ensure_ascii=False)
+        fo.write((out+"\n").encode())
+   except requests.exceptions.RequestException as e:
+        content = f"Error: {str(e)}"
+        # If the request failed, no valid content, but still log it
+        urls = []
+        dois = []
+        res = {'ID': line, 'type': tp, 'url': url, 'content': content, 'links': urls, 'dois': dois}
+        out = json.dumps(res, ensure_ascii=False)
+        fo.write((out + "\n").encode())
+    
 run('model')
 run('data')
 run('source')
