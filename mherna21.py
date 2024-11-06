@@ -85,7 +85,7 @@ with gzip.open(f"output/{utid}.json.gz", 'wb') as fo:
                 }
 
                 # Write the JSON data to the gzip file
-                out = json.dumps(res, ensure_ascii=False, indent=4).encode('utf-8')
+                out = json.dumps(res, ensure_ascii=False).encode('utf-8')
                 fo.write(out)
 
     # Call the run() function to extract the content of README files from HuggigFace models or datasets or GitHub repos. 
