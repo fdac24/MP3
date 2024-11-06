@@ -1,6 +1,7 @@
 import json, re
 import requests
 import gzip
+from tqdm import tqdm
 
 netid = "sbandar1"
 base_urls = {
@@ -23,11 +24,12 @@ regex = {
   "bib": r"@[^}]+}"
 }
 
-output = gzip.open(f"output/{netid}.json.gz", "w")
+output = gzip.open(f"output/{netid}.json.gz", "w", compresslevel=9)
 
 def run(file):
   with open(f"input/{netid}_{file}", "r", encoding="utf-8") as f:
-    for line in f:
+    lines = f.readlines()
+    for line in tqdm(lines, desc=f"Processing {file}", unit="lines"):
       links = []
 
       line = line.strip()
