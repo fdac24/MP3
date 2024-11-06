@@ -7,13 +7,13 @@ import sys, gzip
 utid = 'jchoi38'
 base= { 'model':'https://huggingface.co/', 'data': 'https://huggingface.co/datasets/', 'source': 'https://' }
 post = '/raw/main/README.md'
-postGH = 'blob/master/README.md' # or it could be 'blob/main/README.md
-postGH_main = 'blob/main/README.md'
+postGH = '/blob/master/README.md' # or it could be 'blob/main/README.md
+postGH_main = '/blob/main/README.md'
 
 extU = URLExtract()
 DOIpattern = r'\b(10\.\d{4,9}\/[-._;()/:A-Z0-9]+)\b/i'
 BIBpattern = r'@(?:article|book|inproceedings|misc|techreport)\{[^}]+\}' # From ChatGPT
-# r1\b(10[.][0-9]{4,}(?:[.][0-9]+)*/(?:(?!["&\'<>])[[:graph:]])+)\b'
+# r1\b(10[.][0-9]{4,}(?:[.][0-39]+)*/(?:(?!["&\'<>])[[:graph:]])+)\b'
 
 def extractURLs (c):
  res = extU.find_urls (c)
@@ -38,18 +38,19 @@ def run (tp):
    if tp == 'source':
     (npapers,line) = line.split(';');
     post0 = postGH
-   print(line)
    url = base[tp] + f"{line}{post0}"
+   print(url)
+
    r = requests.get (url)
-   content = r.text
    #github returns repos that do not exist, need to detect that here
-   if r.status_code not in range(200,299):
+   if r.status_code == 404:
     #github when you give master instead of main, that might cause issues as well
     if tp != 'source': continue
     else:
       url_main = base[tp] + f"{line}{postGH_main}"
       r = requests.get(url_main)
-      if r.status_code not in range(200,299): continue
+      print(url_main)
+      if r.status_code == 404: continue
    content = r.text
 
    urls = extractURLs(content)
