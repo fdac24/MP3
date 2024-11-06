@@ -36,19 +36,17 @@ def run (tp):
    url = base[tp] + f"{line}{post0}"
    r = requests.get (url)
 
+   # repo exist?
    if r.status_code == 404:
+      # only process source on error 
       if tp != 'source':
          continue
-      url = base[tp] + f"{line}{postGHAlternate}"
-      r = requests.get(url)
-
-      if r.status_code == 404:
-        continue
+      else:
+         # replace master with main
+         url = base[tp] + f"{line}{postGHAlternate}"
+         r = requests.get(url)
       
    content = r.text;
-   #github returns repos that do not exist, need to detect that here
-
-   #github when you give master instead of main, that might cause issues as well
    urls = extractURLs(content)
    dois = extractDOIs(content)
    res = { 'ID': line, 'type': tp, 'url': url, 'content': content, 'links': urls, 'dois': dois }
