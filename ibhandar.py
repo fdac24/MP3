@@ -21,6 +21,11 @@ def extractDOIs (c):
  res = re.findall (DOIpattern, c)
  return res
 
+def extractBIBs (c):
+ bibs = re.findall(r'@(\w+)\{([^,]+),\s*(.*?)\}', c)
+ return bibs
+
+
 fo = gzip.open(f"output/{utid}.json.gz", 'w')
 
 def run (tp):
@@ -39,7 +44,8 @@ def run (tp):
    #github when you give master instead of main, that might cause issues as well
    urls = extractURLs(content)
    dois = extractDOIs(content)
-   res = { 'ID': line, 'type': tp, 'url': url, 'content': content, 'links': urls, 'dois': dois }
+   bibs = extractBIBs(content)
+   res = { 'ID': line, 'type': tp, 'url': url, 'content': content, 'links': urls, 'dois': dois, 'bibs': bibs }
    out = json.dumps(res, ensure_ascii=False)
    fo.write((out+"\n").encode())
 
