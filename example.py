@@ -4,11 +4,10 @@ from urlextract import URLExtract
 import sys, gzip
 
 
-utid = 'dhodge12'
+utid = 'audris'
 base= { 'model':'https://huggingface.co/', 'data': 'https://huggingface.co/datasets/', 'source': 'https://' }
 post = '/raw/main/README.md'
 postGH = 'blob/master/README.md' # or it could be 'blob/main/README.md'
-postGHAlternate = 'blob/main/README.md'
 
 extU = URLExtract()
 DOIpattern = r'\b(10\.\d{4,9}\/[-._;()/:A-Z0-9]+)\b/i'
@@ -35,19 +34,8 @@ def run (tp):
    print(line)
    url = base[tp] + f"{line}{post0}"
    r = requests.get (url)
-
-   if r.status_code == 404:
-      if tp != 'source':
-         continue
-      url = base[tp] + f"{line}{postGHAlternate}"
-      r = requests.get(url)
-
-      if r.status_code == 404:
-        continue
-      
    content = r.text;
    #github returns repos that do not exist, need to detect that here
-
    #github when you give master instead of main, that might cause issues as well
    urls = extractURLs(content)
    dois = extractDOIs(content)
