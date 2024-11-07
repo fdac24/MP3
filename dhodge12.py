@@ -38,14 +38,18 @@ def run (tp):
 
    # repo exist?
    if r.status_code == 404:
-      # only process source on error 
+      # ensure we are looking at the source as the error
       if tp != 'source':
          continue
-      else:
-         # replace master with main
-         url = base[tp] + f"{line}{postGHAlternate}"
-         r = requests.get(url)
       
+      # replace master with main
+      url = base[tp] + f"{line}{postGHAlternate}"
+      r = requests.get(url)
+
+      # normal error 
+      if r.status_code == 404:
+        continue
+         
    content = r.text;
    urls = extractURLs(content)
    dois = extractDOIs(content)
