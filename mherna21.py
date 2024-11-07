@@ -70,6 +70,9 @@ with gzip.open(f"output/{utid}.json.gz", 'wb') as fo:
                 except requests.RequestException as e:
                     content = f"Error: {str(e)}"
 
+                # removing new lines in content
+                content = content.replace('\n', ' ').replace('\r', ' ').replace('\\n', ' ')
+
                 # Extract URLs, DOIs, and BIBs
                 urls = extractURLs(content)
                 dois = extractDOIs(content)
