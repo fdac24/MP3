@@ -30,7 +30,7 @@ fo = gzip.open(f"output/{utid}.json.gz", 'w')
 
 def run (tp):
  post0 = post
- with open(f"input/{utid}_{tp}", 'r') as f:
+ with open(f"input/{utid}_{tp}", 'r', encoding="utf-8") as f:
   for line in f:
    line = line.strip ()
    if tp == 'source':
@@ -39,6 +39,17 @@ def run (tp):
    print(line)
    url = base[tp] + f"{line}{post0}"
    r = requests.get (url)
+   if r.status_code != 200:
+    if tp == 'source':
+     tempurl = url.replace(postGH, 'blob/main/README.md')
+     r = requests.get(tempurl)
+     if r.status_code == 200:
+      url = tempurl
+     else: 
+      continue
+    else:
+     continue
+
    content = r.text;
    #github returns repos that do not exist, need to detect that here
    #github when you give master instead of main, that might cause issues as well
