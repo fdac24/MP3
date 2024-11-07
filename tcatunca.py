@@ -33,12 +33,12 @@ def extractBIBs (c):
    else:
       return res
 
-fo = gzip.open(f"mp3/output/{utid}.json.gz", 'w')
+fo = gzip.open(f"output/{utid}.json.gz", 'w')
 
 def run(tp):
    contentCheck = ''
    
-   with open(f"mp3/input/{utid}_{tp}", 'r') as f:
+   with open(f"input/{utid}_{tp}", 'r') as f:
       for line in f:
          line = line.strip()
          if tp == 'source':
