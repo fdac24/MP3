@@ -1,88 +1,94 @@
-# added multi-threading to speed up the process
-# finished extra credit to also extract bibs
-
-import json, re
+import json
+import re
 import requests
 from urlextract import URLExtract
-import sys, gzip
-from concurrent.futures import ThreadPoolExecutor, as_completed
+import gzip
+from concurrent.futures import ThreadPoolExecutor
 from threading import Lock
 
+# User ID and URL templates
+USER_ID = 'edayney'
+URL_BASE = {
+    'model': 'https://huggingface.co/',
+    'data': 'https://huggingface.co/datasets/',
+    'source': 'https://'
+}
+RAW_SUFFIX = '/raw/main/README.md'
+GH_SUFFIX = 'blob/master/README.md'
 
-utid = 'edayney'
-base= { 'model':'https://huggingface.co/', 'data': 'https://huggingface.co/datasets/', 'source': 'https://' }
-post = '/raw/main/README.md'
-postGH = 'blob/master/README.md' # or it could be 'blob/main/README.md'
+# Regex patterns for extraction
+DOI_REGEX = r'\b(10\.\d{4,9}\/[-._;()/:A-Z0-9]+)\b/i'
+BIB_PATTERN = r'@[\w]+\{[^}]+\}'
 
-extU = URLExtract()
-DOIpattern = r'\b(10\.\d{4,9}\/[-._;()/:A-Z0-9]+)\b/i'
-#r1\b(10[.][0-9]{4,}(?:[.][0-9]+)*/(?:(?!["&\'<>])[[:graph:]])+)\b'
+# Thread-safety for writing output
+output_lock = Lock()
 
-lock = Lock()  # To manage concurrent access to the output file
+# Helper: Extract URLs using URLExtract
+def get_urls(content):
+    extractor = URLExtract()
+    return extractor.find_urls(content)
 
+# Helper: Extract DOIs using regex
+def get_dois(content):
+    return re.findall(DOI_REGEX, content)
 
-def extractURLs (c):
- res = extU.find_urls (c)
- return res
+# Helper: Extract bibliographies using regex
+def get_bibs(content):
+    return re.findall(BIB_PATTERN, content, flags=re.DOTALL)
 
-def extractDOIs (c):
- res = re.findall (DOIpattern, c)
- return res
-
-def extractBibs(c):
-    bib_pattern = r'@[\w]+\{[^}]+\}'
-    res = re.findall(bib_pattern, c, flags=re.DOTALL)
-    return res
-
-fo = gzip.open(f"output/{utid}.json.gz", 'w')
-
-def process_line(args):
-    line, tp = args
+# Function to process a single line (fetch and extract details)
+def process_entry(task):
+    line, data_type = task
     line = line.strip()
-    post0 = post
-    if tp == 'source':
-        npapers, line = line.split(';')
-        post0 = postGH
-    print(f"Processing: {line}")
-    url = base[tp] + f"{line}{post0}"
+    suffix = RAW_SUFFIX if data_type != 'source' else GH_SUFFIX
+    if data_type == 'source':
+        _, line = line.split(';')
+
+    full_url = f"{URL_BASE[data_type]}{line}{suffix}"
+    print(f"Processing URL: {full_url}")
+
     try:
-        r = requests.get(url)
-        content = r.text
-        urls = extractURLs(content)
-        dois = extractDOIs(content)
-        bibs = extractBibs(content)
-    except Exception as e:
-        print(f"Error processing {line}: {e}")
-        content = ''
-        urls = []
-        dois = []
-        bibs = []
-    res = {
-        'ID': line,
-        'type': tp,
-        'url': url,
-        'content': content,
-        'links': urls,
-        'dois': dois,
-        'bibs': bibs
+        response = requests.get(full_url)
+        response_content = response.text
+        urls = get_urls(response_content)
+        dois = get_dois(response_content)
+        bibs = get_bibs(response_content)
+    except Exception as error:
+        print(f"Error fetching {line}: {error}")
+        response_content, urls, dois, bibs = '', [], [], []
+
+    # Result to store
+    result = {
+        'Identifier': line,
+        'Category': data_type,
+        'URL': full_url,
+        'Content': response_content,
+        'Links': urls,
+        'DOIs': dois,
+        'Bibliographies': bibs
     }
-    out = json.dumps(res, ensure_ascii=False)
-    with lock:
-        fo.write((out + "\n").encode())
 
-def run(tp):
-    input_file = f"input/{utid}_{tp}"
-    tasks = []
-    with open(input_file, 'r') as f:
-        lines = f.readlines()
-    args_list = [(line, tp) for line in lines]
+    # Write result to output file in a thread-safe manner
+    with output_lock:
+        OUTPUT_FILE.write((json.dumps(result, ensure_ascii=False) + "\n").encode())
+
+# Function to manage a category (model/data/source)
+def process_category(data_type):
+    input_file_path = f"input/{USER_ID}_{data_type}"
+    with open(input_file_path, 'r') as file:
+        tasks = [(line, data_type) for line in file.readlines()]
+
+    # Parallel processing with threads
     with ThreadPoolExecutor(max_workers=10) as executor:
-        executor.map(process_line, args_list)
+        executor.map(process_entry, tasks)
 
-fo = gzip.open(f"output/{utid}.json.gz", 'wb')
+# Main output file setup (GZIP)
+OUTPUT_FILE = gzip.open(f"output/{USER_ID}.json.gz", 'wb')
 
-run('model')
-run('data')
-run('source')
+# Process categories
+process_category('model')
+process_category('data')
+process_category('source')
 
-fo.close()
+# Close output file
+OUTPUT_FILE.close()
